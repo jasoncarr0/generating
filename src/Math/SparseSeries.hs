@@ -1,10 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Math.DenseSeries 
+module Math.SparseSeries 
 (
 
 ) where
 import NumericPrelude
 
-
-data (Indexing i) => DS i a = DS [[a]]
+data Indexing i => SpS i a = SpS (i -> a)

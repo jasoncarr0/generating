@@ -9,4 +9,4 @@ import Algebra.Additive
 
 class Algebra.Additive.C i => C i where
     norm :: i -> Int
-    all :: Int -> [i]
+    level :: Int -> [i]
