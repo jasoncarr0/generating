@@ -5,5 +5,9 @@ module Math.SparseSeries
 
 ) where
 import NumericPrelude
+import qualified Algebra.Ring as Ring
 
-data Indexing i => SpS i a = SpS (i -> a)
+data SpS i a = SpS (i -> a)
+
+instance Functor (SpS i) where
+	fmap f (SpS g) = SpS (fmap f g)

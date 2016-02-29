@@ -1,12 +1,10 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Math.Indexing
+module Math.Indexing.Instances
 (
 ) where
 
 import NumericPrelude
 import qualified Algebra.Additive as Add
+import Math.Indexing
 
-class Add.C i => C i where
-    norm :: i -> Int
-    atNorm :: Int -> [i]
