@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Math.Indexing.Labeled
-( T
+( T (T)
 ) where
 
 import NumericPrelude
@@ -27,4 +27,4 @@ instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
         compare (Map.toAscList m1) (Map.toAscList m2)
         
 norm :: Add.C a => T l a -> a
-norm (T m) = Map.foldr (Add.+) zero m
+norm (T m) = Map.foldr (+) zero m
