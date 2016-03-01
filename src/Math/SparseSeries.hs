@@ -13,11 +13,11 @@ import qualified Data.Map as Map
 newtype T i a = T [(i, a)]
 
 instance Functor (T i) where
-    fmap f (T g) = T (fmap f g)
+    fmap f (T g) = T (fmap (fmap f) g)
 instance (Ord i, ZT.C a, Add.C i, Add.C a) => Add.C (T i a) where
     (T m1) + (T m2) = T $ undefined
     zero = T []
-    negate (T m1) = T (fmap negate m1)
+    negate (T m1) = T (fmap (fmap negate) m1)
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str
