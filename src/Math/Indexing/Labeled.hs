@@ -24,8 +24,6 @@ instance (ZT.C a) => ZT.C (T l a) where
     isZero (T m) = null $ excludeZero m
 instance (Eq l, Eq a) => Eq (T l a) where
     (T m1) == (T m2) = m1 == m2
-    
--- TODO: Deal with equal bottoms, best is probably just to cut off
 instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
     compare t1@(T m1) t2@(T m2) = let normCompare = compare (norm t1) (norm t2) in
         if normCompare /= EQ then normCompare else
