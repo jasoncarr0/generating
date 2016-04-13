@@ -3,6 +3,8 @@
 module Math.Indexing.Labeled
 ( T (T)
 , enumLabelsBy
+, enumLabelsWeighted
+, fromList
 ) where
 
 import NumericPrelude
@@ -36,9 +38,9 @@ instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
 -- of labeled indices in these variables
 -- Each group is treated equally, and each successive group appears later than previous groups
 -- The outermost list may be infinite, but each of the groups must be finite
-enumLabelsBy :: (Ord x, ZT.C a, Ring.C a) => [[x]] -> [T x a]
+enumLabelsBy :: (Ord l, ZT.C a, Ring.C a) => [[l]] -> [T l a]
 enumLabelsBy xs = [1..] >>= (enum' $ zip xs [1..])
-    where enum' :: (Ord x, ZT.C a, Ring.C a) => [([x], Int)] -> Int -> [T x a]
+    where enum' :: (Ord l, ZT.C a, Ring.C a) => [([l], Int)] -> Int -> [T l a]
           enum' xs 0 = [T (Map.fromList [])]
           enum' xs 1 = map (\i -> T $ Map.singleton i $ fromInteger 1) (fst $ head xs)
           enum' xs i = do (x, j) <- take i xs
@@ -49,24 +51,13 @@ enumLabelsBy xs = [1..] >>= (enum' $ zip xs [1..])
 -- | enumLabelsWeighted takes a list of elements and produces a list of
 -- of labeled indices in these variables consistent with a weighting
 -- that gives the nth variable weight n
-enumLabelsWeighted :: (Ord x, ZT.C a, Ring.C a) => [x] -> [T x a]
+enumLabelsWeighted :: (Ord l, ZT.C a, Ring.C a) => [l] -> [T l a]
 enumLabelsWeighted = enumLabelsBy . (map (:[]))
 
+-- | fromList creates a labeled index from a list of pairs
+fromList :: Ord l => [(l, a)] -> T l a
+fromList = T . Map.fromList
 
-
-instance (Ord l, HasTrie l, HasTrie a) => HasTrie (T l a) where
-    newtype ((T l a) :->: b) = LabelTrie {unLabelTrie :: [(l, a)] :->: b}
-    --newtype ((T l a) :->: b) = LabelTrie {unLabelTrie :: ((Map.Map l a), Int :->: b)
-
-    trie f = LabelTrie $ trie (f . T . Map.fromList)
-      where unT (T map) = map
-    untrie t = (. (Map.assocs . unT)) (untrie $ unLabelTrie t)
-      where unT (T map) = map
-    enumerate = map (mapFst (T . Map.fromList)) . enumerate . unLabelTrie 
-      where mapFst f (a, b) = (f a, b)
-
-
-        
 norm :: Add.C a => (l -> a -> a) -> T l a -> a
 norm f (T m) = Map.foldrWithKey (\k x y -> (f k x) + y) zero m
 

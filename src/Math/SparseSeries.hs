@@ -21,13 +21,13 @@ instance (Ord i, ZT.C a, Add.C i, Add.C a) => Add.C (T i a) where
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str
+-- | Currently comparison and equality of two equal and infinite series will
+-- result in bottom
 instance (Eq i, Eq a) => Eq (T i a) where
     (T m1) == (T m2) = m1 == m2
     
--- TODO: Deal with equal bottoms, best is probably just to cut off
+-- | Currently comparison and equality of two equal and infinite series will
+-- result in bottom
 instance (Ord i, Add.C a, Ord a) => Ord (T i a) where
-    compare (T m1) (T m2) = compare m1 m2 
-        
-        
-excludeZero :: ZT.C a => Map.Map l a -> Map.Map l a
-excludeZero = Map.filter (not . isZero)
+    compare (T m1) (T m2) = compare m1 m2
+       
