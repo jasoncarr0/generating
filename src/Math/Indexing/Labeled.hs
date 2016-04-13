@@ -2,18 +2,20 @@
 
 module Math.Indexing.Labeled
 ( T (T)
+, enumLabelsBy
 ) where
 
 import NumericPrelude
 import qualified Algebra.Additive as Add
+import qualified Algebra.Ring as Ring
 import qualified Algebra.ZeroTestable as ZT
-import qualified Data.Map as Map
+import qualified Data.Map.Strict as Map
 import GHC.Generics
 import Data.MemoTrie (HasTrie, (:->:), trieGeneric, untrieGeneric, enumerateGeneric, Reg, trie, untrie, enumerate)
 --import Data.MemoTrie (:->:)
 
-newtype T l a = T (Map.Map l a) deriving Generic
---Anything which outputs a map MUST run excludeZero
+newtype T l a = T (Map.Map l a) deriving (Eq, Generic)
+--Map output should be guaranteed to not have 0 in it
 instance (Ord l, ZT.C a, Add.C a) => Add.C (T l a) where
     (T m1) + (T m2) = T $ excludeZero $ Map.unionWith (+) m1 m2
     zero = T Map.empty
@@ -23,12 +25,35 @@ instance (Show l, Show a) => Show (T l a) where
         showTerm l a str = ' ' : ((show l) ++ "^" ++ (show a) ++ str)
 instance (ZT.C a) => ZT.C (T l a) where
     isZero (T m) = null $ excludeZero m
-instance (Eq l, Eq a) => Eq (T l a) where
-    (T m1) == (T m2) = m1 == m2
+--instance (Eq l, Eq a) => Eq (T l a) where
+--    (T m1) == (T m2) = m1 == m2
 instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
     compare t1@(T m1) t2@(T m2) = let normCompare = compare (norm t1) (norm t2) in
         if normCompare /= EQ then normCompare else
         compare (Map.toAscList m1) (Map.toAscList m2)
+
+
+-- | enumLabelsBy takes a list of finite lists of labels and produces a list
+-- of labeled indices in these variables
+-- Each group is treated equally, and each successive group appears later than previous groups
+-- The outermost list may be infinite, but each of the groups must be finite
+enumLabelsBy :: (Ord x, ZT.C a, Ring.C a) => [[x]] -> [T x a]
+enumLabelsBy xs = [1..] >>= (enum' $ zip xs [1..])
+    where enum' :: (Ord x, ZT.C a, Ring.C a) => [([x], Int)] -> Int -> [T x a]
+          enum' xs 0 = [T (Map.fromList [])]
+          enum' xs 1 = map (\i -> T $ Map.singleton i $ fromInteger 1) (fst $ head xs)
+          enum' xs i = do (x, j) <- take i xs
+                          out <- enum' (take j xs) (i - j)
+                          x' <- x
+                          return $ out + T (Map.singleton x' $ fromInteger 1)
+
+-- | enumLabelsWeighted takes a list of elements and produces a list of
+-- of labeled indices in these variables consistent with a weighting
+-- that gives the nth variable weight n
+enumLabelsWeighted :: (Ord x, ZT.C a, Ring.C a) => [x] -> [T x a]
+enumLabelsWeighted = enumLabelsBy . (map (:[]))
+
+
 
 instance (Ord l, HasTrie l, HasTrie a) => HasTrie (T l a) where
     newtype ((T l a) :->: b) = LabelTrie {unLabelTrie :: [(l, a)] :->: b}
@@ -36,18 +61,10 @@ instance (Ord l, HasTrie l, HasTrie a) => HasTrie (T l a) where
 
     trie f = LabelTrie $ trie (f . T . Map.fromList)
       where unT (T map) = map
--- f :: T l a -> b
--- trie :: (T l a -> b) -> LabelTrie (== [(l, a)] :->: b)
--- trie :: ([(l, a)] -> b) -> [(l, a)] :->: b
--- fromList . f ::
     untrie t = (. (Map.assocs . unT)) (untrie $ unLabelTrie t)
       where unT (T map) = map
--- untrie :: LabelTrie -> (T l a -> b)
--- untrie . unLabelTrie :: LabelTrie -> [(l, a)] -> b
     enumerate = map (mapFst (T . Map.fromList)) . enumerate . unLabelTrie 
       where mapFst f (a, b) = (f a, b)
-
-
 
 
         
