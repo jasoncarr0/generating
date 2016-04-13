@@ -28,10 +28,9 @@ instance (ZT.C a) => ZT.C (T l a) where
 --instance (Eq l, Eq a) => Eq (T l a) where
 --    (T m1) == (T m2) = m1 == m2
 instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
-    compare t1@(T m1) t2@(T m2) = let normCompare = compare (norm t1) (norm t2) in
-        if normCompare /= EQ then normCompare else
-        compare (Map.toAscList m1) (Map.toAscList m2)
-
+    compare t1@(T m1) t2@(T m2) = if normCompare /= EQ then normCompare else
+        compare (Map.toAscList m1) (Map.toAscList m2) where 
+            normCompare = compare (norm (flip const) t1) (norm (flip const) t2)
 
 -- | enumLabelsBy takes a list of finite lists of labels and produces a list
 -- of labeled indices in these variables
@@ -68,8 +67,8 @@ instance (Ord l, HasTrie l, HasTrie a) => HasTrie (T l a) where
 
 
         
-norm :: Add.C a => T l a -> a
-norm (T m) = Map.foldr (+) zero m
+norm :: Add.C a => (l -> a -> a) -> T l a -> a
+norm f (T m) = Map.foldrWithKey (\k x y -> (f k x) + y) zero m
 
 excludeZero :: ZT.C a => Map.Map l a -> Map.Map l a
 excludeZero = Map.filter (not . isZero)
