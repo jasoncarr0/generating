@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TypeOperators, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Math.Indexing.Labeled
 ( T (T)
@@ -12,9 +12,6 @@ import qualified Algebra.Additive as Add
 import qualified Algebra.Ring as Ring
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
-import GHC.Generics
-import Data.MemoTrie (HasTrie, (:->:), trieGeneric, untrieGeneric, enumerateGeneric, Reg, trie, untrie, enumerate)
---import Data.MemoTrie (:->:)
 
 newtype T l a = T (Map.Map l a) deriving (Eq, Generic)
 --Map output should be guaranteed to not have 0 in it
