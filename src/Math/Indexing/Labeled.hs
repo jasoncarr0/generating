@@ -23,8 +23,7 @@ instance (Ord l, ZT.C a, Add.C a) => Add.C (T l a) where
     zero = T Map.empty
     negate (T m1) = T (fmap negate m1)
 instance (Show l, Show a) => Show (T l a) where
-    show (T m1) = drop 1 $ Map.foldrWithKey showTerm "" m1 where
-        showTerm l a str = ' ' : ((show l) ++ "^" ++ (show a) ++ str)
+    show (T m1) = drop 1 $ Map.foldrWithKey showTerm "" m1 where showTerm l a str = ' ' : ((show l) ++ "^" ++ (show a) ++ str)
 instance (ZT.C a) => ZT.C (T l a) where
     isZero (T m) = null $ excludeZero m
 --instance (Eq l, Eq a) => Eq (T l a) where
