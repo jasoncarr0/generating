@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, FlexibleInstances, MultiParamTypeClasses #-}
 
 module Math.Indexing.Labeled
 ( T (T)
@@ -10,15 +10,16 @@ module Math.Indexing.Labeled
 import NumericPrelude
 import qualified Algebra.Additive as Add
 import qualified Algebra.Ring as Ring
+import qualified Algebra.Module as Module
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
 
-newtype T l a = T (Map.Map l a) deriving (Eq, Generic)
---Map output should be guaranteed to not have 0 in it
+newtype T l a = T (Map.Map l a) deriving (Eq)
 instance (Ord l, ZT.C a, Add.C a) => Add.C (T l a) where
     (T m1) + (T m2) = T $ excludeZero $ Map.unionWith (+) m1 m2
     zero = T Map.empty
     negate (T m1) = T (fmap negate m1)
+
 instance (Show l, Show a) => Show (T l a) where
     show (T m1) = drop 1 $ Map.foldrWithKey showTerm "" m1 where showTerm l a str = ' ' : ((show l) ++ "^" ++ (show a) ++ str)
 instance (ZT.C a) => ZT.C (T l a) where
@@ -29,6 +30,9 @@ instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
     compare t1@(T m1) t2@(T m2) = if normCompare /= EQ then normCompare else
         compare (Map.toAscList m1) (Map.toAscList m2) where 
             normCompare = compare (norm (flip const) t1) (norm (flip const) t2)
+
+
+
 
 -- | enumLabelsBy takes a list of finite lists of labels and produces a list
 -- of labeled indices in these variables

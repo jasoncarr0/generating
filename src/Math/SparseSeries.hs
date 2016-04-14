@@ -48,7 +48,5 @@ mergeWithIndex f (T xs1) (T xs2) = T (mergeWith' f xs1 xs2) where
         | i1 > i2 = (i2, a2):(mergeWith' f xs1 xs2')
         | i1 < i2 = (i1, a1):(mergeWith' f xs1' xs2)
 
-
-
 excludeZeroes :: ZT.C a => [(i, a)] -> [(i, a)]
 excludeZeroes = filter (\(_, x) -> not (isZero x))
