@@ -14,10 +14,15 @@ newtype T i a = T [(i, a)]
 
 instance Functor (T i) where
     fmap f (T g) = T (fmap (fmap f) g)
-instance (Ord i, ZT.C a, Add.C i, Add.C a) => Add.C (T i a) where
+instance (Ord i, Add.C i, ZT.C a, Add.C a) => Add.C (T i a) where
     t1 + t2 = mergeWith (+) t1 t2
     zero = T []
     negate (T m1) = T (fmap (fmap negate) m1)
+instance (Ord i, Add.C i, ZT.C a, Ring.C a) => Ring.C (T i a) where
+    one = singleton zero
+    fromInteger n = T [(zero, fromInteger n)]
+    t1 * t2 = multWith (\(_, x1) (_, x2) -> x1 * x2) t1 t2
+
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str
@@ -48,5 +53,18 @@ mergeWithIndex f (T xs1) (T xs2) = T (mergeWith' f xs1 xs2) where
         | i1 > i2 = (i2, a2):(mergeWith' f xs1 xs2')
         | i1 < i2 = (i1, a1):(mergeWith' f xs1' xs2)
 
+-- | merges two series by taking pairwise each possible sum of indices
+-- and applying a function to each of these pairs
+multWith :: (Add.C i, Ord i, Add.C a) =>
+    ((i, a) -> (i, a) -> a) -> T i a -> T i a -> T i a
+multWith f (T ts1) (T ts2) = T $ multWith' f ts1 ts2 where
+    multWith' f [] _ = []
+    multWith' f _ [] = []
+    multWith' f ((i1, x1):ts1) ((i2, x2):ts2) = ((i1 + i2), f (i1, x1) (i2, x2)) : (map (appF f (i1, x1)) ts2) + (multWith' f ts1 ((i2, x2):ts2))
+    appF f (i1, x1) (i2, x2) = (i1 + i2, f (i1, x1) (i2, x2))
+
 excludeZeroes :: ZT.C a => [(i, a)] -> [(i, a)]
 excludeZeroes = filter (\(_, x) -> not (isZero x))
+
+(!!) :: Eq i => T i a -> i -> a
+(T ts) !! i = snd $ head $ dropWhile (\(i', _) -> i /= i') ts
