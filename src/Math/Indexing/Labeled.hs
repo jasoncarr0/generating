@@ -9,16 +9,16 @@ module Math.Indexing.Labeled
 
 import NumericPrelude
 import qualified Algebra.Additive as Add
+import qualified Algebra.Monoid as Mon
 import qualified Algebra.Ring as Ring
 import qualified Algebra.Module as Module
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
 
 newtype T l a = T (Map.Map l a) deriving (Eq)
-instance (Ord l, ZT.C a, Add.C a) => Add.C (T l a) where
-    (T m1) + (T m2) = T $ excludeZero $ Map.unionWith (+) m1 m2
-    zero = T Map.empty
-    negate (T m1) = T (fmap negate m1)
+instance (Ord l, ZT.C a, Add.C a) => Mon.C (T l a) where
+    (T m1) <*> (T m2) = T $ excludeZero $ Map.unionWith (+) m1 m2
+    idt = T Map.empty
 
 instance (Show l, Show a) => Show (T l a) where
     show (T m1) = drop 1 $ Map.foldrWithKey showTerm "" m1 where showTerm l a str = ' ' : ((show l) ++ "^" ++ (show a) ++ str)
@@ -46,7 +46,7 @@ enumLabelsBy xs = [1..] >>= (enum' $ zip xs [1..])
           enum' xs i = do (x, j) <- take i xs
                           out <- enum' (take j xs) (i - j)
                           x' <- x
-                          return $ out + T (Map.singleton x' $ fromInteger 1)
+                          return $ out Mon.<*> T (Map.singleton x' $ fromInteger 1)
 
 -- | enumLabelsWeighted takes a list of elements and produces a list of
 -- of labeled indices in these variables consistent with a weighting
