@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, FlexibleInstances, MultiParamTypeClasses #-}
 
-module Math.Indexing.Indexing
+module Math.SeriesIndex
 ( C
 , eval
 , pureI

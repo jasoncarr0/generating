@@ -11,7 +11,7 @@ import qualified Algebra.Monoid as Mon
 import qualified Algebra.Ring as Ring
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map as Map
-import qualified Math.Indexing.Indexing as Index
+import qualified Math.SeriesIndex as Index
 
 newtype T i a = T [(i, a)]
 

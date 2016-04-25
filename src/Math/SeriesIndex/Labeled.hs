@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, FlexibleInstances, MultiParamTypeClasses #-}
 
-module Math.Indexing.Labeled
-( T (T)
+module Math.SeriesIndex.Labeled
+( T 
 , enumLabelsBy
 , enumLabelsWeighted
 , fromList
@@ -14,7 +14,7 @@ import qualified Algebra.Ring as Ring
 import qualified Algebra.ToInteger as ToInt
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
-import qualified Math.Indexing.Indexing as Index
+import qualified Math.SeriesIndex as Index
 
 newtype T l a = T (Map.Map l a) deriving (Eq)
 instance (Ord l, ZT.C a, Add.C a) => Mon.C (T l a) where
