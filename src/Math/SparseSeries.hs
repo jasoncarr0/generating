@@ -44,7 +44,7 @@ compose (T ts) (l, t1) =  T $ compose' func ts where
       | l == l' = t1
       | otherwise = T [(Index.pureI l', one)]
     compose' func [] = []
-    compose' func ((i, x):ts) = (i2, x2) : 
+    compose' func ((i, x):ts) = (i2, x*x2) : 
       (mergeLWith(+) ts2 $ compose' func ts) where
         (T ((i2, x2):ts2)) = Index.eval i func
 
