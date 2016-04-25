@@ -39,7 +39,7 @@ instance (Ord i, Add.C a, Ord a) => Ord (T i a) where
     compare (T m1) (T m2) = compare m1 m2
 
 compose :: (Index.C i l, ZT.C a, Ring.C a) => T i a -> (l, T i a) -> T i a 
-compose (T ts) (l, t1) =  T $ compose' func ts where
+compose (T ts) (l, t1) =  T $ joinRepeats $ compose' func ts where
     func l'
       | l == l' = t1
       | otherwise = T [(Index.pureI l', one)]
@@ -47,6 +47,11 @@ compose (T ts) (l, t1) =  T $ compose' func ts where
     compose' func ((i, x):ts) = (i2, x*x2) : 
       (mergeLWith(+) ts2 $ compose' func ts) where
         (T ((i2, x2):ts2)) = Index.eval i func
+    joinRepeats [] = []
+    joinRepeats [x] = [x]
+    joinRepeats ((i1,x1):(i2,x2):xs)
+      | i1 == i2 = joinRepeats $ (i1, x1 + x2):xs
+      | otherwise = (i1, x1) : (joinRepeats $ (i2,x2):xs)
 
 -- | singleton returns the series of a single value at a specific index
 singleton :: Ring.C a => i -> T i a
