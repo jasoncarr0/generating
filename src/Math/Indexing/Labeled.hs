@@ -11,9 +11,10 @@ import NumericPrelude
 import qualified Algebra.Additive as Add
 import qualified Algebra.Monoid as Mon
 import qualified Algebra.Ring as Ring
-import qualified Algebra.Module as Module
+import qualified Algebra.ToInteger as ToInt
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
+import qualified Math.Indexing.Indexing as Index
 
 newtype T l a = T (Map.Map l a) deriving (Eq)
 instance (Ord l, ZT.C a, Add.C a) => Mon.C (T l a) where
@@ -24,14 +25,14 @@ instance (Show l, Show a) => Show (T l a) where
     show (T m1) = drop 1 $ Map.foldrWithKey showTerm "" m1 where showTerm l a str = ' ' : ((show l) ++ "^" ++ (show a) ++ str)
 instance (ZT.C a) => ZT.C (T l a) where
     isZero (T m) = null $ excludeZero m
---instance (Eq l, Eq a) => Eq (T l a) where
---    (T m1) == (T m2) = m1 == m2
 instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
     compare t1@(T m1) t2@(T m2) = if normCompare /= EQ then normCompare else
         compare (Map.toAscList m1) (Map.toAscList m2) where 
             normCompare = compare (norm (flip const) t1) (norm (flip const) t2)
-
-
+instance (Ord l, ZT.C a, ToInt.C a, Ring.C a) => Index.C (T l a) l where
+    eval (T m) f = Map.foldrWithKey doPower one m where
+      doPower l a1 r = (f l)^(toInteger a1) * r
+    pureI l = T $ Map.singleton l one
 
 
 -- | enumLabelsBy takes a list of finite lists of labels and produces a list
