@@ -6,6 +6,7 @@ module Math.SparseSeries
 ) where
 import NumericPrelude
 import qualified Algebra.Additive as Add
+import qualified Algebra.Field as Field
 import Algebra.Monoid ((<*>))
 import qualified Algebra.Monoid as Mon
 import qualified Algebra.Ring as Ring
@@ -21,10 +22,14 @@ instance (Ord i, Mon.C i, ZT.C a, Add.C a) => Add.C (T i a) where
     t1 + t2 = mergeWith (+) t1 t2
     zero = T []
     negate (T m1) = T (fmap (fmap negate) m1)
+instance (Ord i, ZT.C a) => ZT.C (T i a) where
+    isZero (T l) = null l -- zero terms should be removed by other operations
 instance (Ord i, Mon.C i, ZT.C a, Ring.C a) => Ring.C (T i a) where
     one = singleton Mon.idt
     fromInteger n = T [(Mon.idt, fromInteger n)]
     t1 * t2 = multWith (\(_, x1) (_, x2) -> x1 * x2) t1 t2
+
+
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str
@@ -38,6 +43,9 @@ instance (Eq i, Eq a) => Eq (T i a) where
 instance (Ord i, Add.C a, Ord a) => Ord (T i a) where
     compare (T m1) (T m2) = compare m1 m2
 
+
+-- | compose two sparse series given a label to replace with another series
+-- as long as the series to replace the label has 0 constant term
 compose :: (Index.C i l, ZT.C a, Ring.C a) => T i a -> (l, T i a) -> T i a 
 compose (T ts) (l, t1) =  T $ joinRepeats $ compose' func ts where
     func l'
@@ -56,12 +64,6 @@ compose (T ts) (l, t1) =  T $ joinRepeats $ compose' func ts where
 -- | singleton returns the series of a single value at a specific index
 singleton :: Ring.C a => i -> T i a
 singleton i = T [(i, one)]
-
-star :: (Ring.C a, Enum a, Mon.C i) => i -> T i a
-star l = T $ map (\n -> (l^%n, one)) [0..]
-    where x^%n = Mon.cumulate $ take n $ repeat x
-
-
 
 
 -- | merge two sparse series together, combining repeated values with a function
@@ -106,4 +108,22 @@ excludeZeroes = filter (\(_, x) -> not (isZero x))
 (T ts) !! i = snd $ head $ dropWhile (\(i', _) -> i /= i') ts
 
 
--- | 
+
+
+
+
+-- | Generates the series 1 + x + x^2 + x^3 + ...  for a given label
+star :: (Ring.C a, Mon.C i) => i -> T i a
+star i = T $ map (\n -> (n `mtimes` i, one)) [0..]
+    where mtimes n l = Mon.cumulate $ take n $ repeat i
+    
+
+-- | Generates the series 1 + x + x^2/2 + x^3/6 + x^4/24 + ...
+-- for a given label and field coefficients
+expS :: (Field.C a, Mon.C i) => i -> T i a 
+expS i = T $ zipWith (\n f -> (n `mtimes` i, one / (fromInteger f))) [0..] fact
+    where mtimes n l = Mon.cumulate $ take (fromInteger n) $ repeat i
+          fact = one:zipWith (*) fact [one..]
+
+
+

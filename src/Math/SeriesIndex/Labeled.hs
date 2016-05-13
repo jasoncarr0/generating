@@ -16,6 +16,10 @@ import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
 import qualified Math.SeriesIndex as Index
 
+
+
+-- | An indexing which maps finitely many elements from a label type to
+-- an exponent, with monoid action given by adding the exponents for each
 newtype T l a = T (Map.Map l a) deriving (Eq)
 instance (Ord l, ZT.C a, Add.C a) => Mon.C (T l a) where
     (T m1) <*> (T m2) = T $ excludeZero $ Map.unionWith (+) m1 m2
@@ -34,6 +38,20 @@ instance (Ord l, ZT.C a, ToInt.C a, Ring.C a) => Index.C (T l a) l where
       doPower l a1 r = (f l)^(toInteger a1) * r
     pureI l = T $ Map.singleton l one
 
+
+-- | Lift from the internal representation to the indexing
+lift0 :: Map.Map l a -> T l a
+lift0 = T
+
+-- | Lift a function in one argument over the internal representation 
+-- to one over the indexing
+lift1 :: (Map.Map l a -> Map.Map l a) -> T l a -> T l a
+lift1 f (T m) = T (f m)
+
+-- | Lift a function in two arguments over the internal representation 
+-- to one over the indexing
+lift2 :: (Map.Map l a -> Map.Map l a -> Map.Map l a) -> T l a -> T l a -> T l a
+lift2 f (T m1) (T m2) = T (f m1 m2)
 
 -- | enumLabelsBy takes a list of finite lists of labels and produces a list
 -- of labeled indices in these variables

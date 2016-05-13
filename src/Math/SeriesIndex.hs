@@ -17,8 +17,9 @@ import qualified Data.Map.Strict as Map
 class (Ord i, Mon.C i, Ord l) => C i l where
 -- | evaluate the element of a label given an embedding into any ring
 -- precondition: for an embedding f and a label l, eval l f >= f l
--- furthermore, l1 < l2 -> eval f l1 < eval f l2
+-- furthermore,   l1 < l2   implies   eval f l1 < eval f l2
 -- whenever f preserves order
     eval :: (Ring.C r) => i -> (l -> r) -> r
+-- | Make an index from a label
     pureI :: l -> i
 
