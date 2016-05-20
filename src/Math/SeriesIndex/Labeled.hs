@@ -35,9 +35,10 @@ instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
             normCompare = compare (norm (flip const) t1) (norm (flip const) t2)
 instance (Ord l, ZT.C a, ToInt.C a, Ring.C a) => Index.C (T l a) l where
     eval (T m) f = Map.foldrWithKey doPower one m where
-      doPower l a1 r = (f l)^(toInteger a1) * r
-    pureI l = T $ Map.singleton l one
-
+      doPower l a1 r = (f l id)^(toInteger a1) * r
+    fromLblPow l n = T $ Map.singleton l (fromInteger n)
+    getLblPow l (T m) = Map.foldr (+) 0 $ Map.mapWithKey 
+        (\l' n -> if l' == l then toInteger n else 0) m
 
 -- | Lift from the internal representation to the indexing
 lift0 :: Map.Map l a -> T l a

@@ -1,4 +1,9 @@
 # sandbox
 .cabal-sandbox
 cabal.sandbox.config
+*.swl
+*.swm
+*.swn
+*.swo
+*.swp
 dist

@@ -2,17 +2,18 @@
 
 module Math.SparseSeries 
 ( T (T)
-
 ) where
 import NumericPrelude
 import qualified Algebra.Additive as Add
 import qualified Algebra.Field as Field
 import Algebra.Monoid ((<*>))
 import qualified Algebra.Monoid as Mon
+import qualified Algebra.MPower as MPow
 import qualified Algebra.Ring as Ring
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map as Map
 import qualified Math.SeriesIndex as Index
+
 
 newtype T i a = T [(i, a)]
 
@@ -43,24 +44,30 @@ instance (Eq i, Eq a) => Eq (T i a) where
 instance (Ord i, Add.C a, Ord a) => Ord (T i a) where
     compare (T m1) (T m2) = compare m1 m2
 
+-- | Utility function to join repeated indices
+joinRepeats :: (Eq i, Ring.C a) => [(i, a)] -> [(i, a)]
+joinRepeats [] = []
+joinRepeats [x] = [x]
+joinRepeats ((i1,x1):(i2,x2):xs)
+    | i1 == i2 = joinRepeats $ (i1, x1 + x2):xs
+    | otherwise = (i1, x1) : (joinRepeats $ (i2,x2):xs)
+
+-- | Apply a nondecreasing function the indices to a function on series
+liftIndex :: (Eq i, Ring.C a) => (i -> i) -> T i a -> T i a 
+liftIndex f (T ps) = T $ joinRepeats $ map (\(i,a) -> (f i, a)) ps
 
 -- | compose two sparse series given a label to replace with another series
 -- as long as the series to replace the label has 0 constant term
 compose :: (Index.C i l, ZT.C a, Ring.C a) => T i a -> (l, T i a) -> T i a 
 compose (T ts) (l, t1) =  T $ joinRepeats $ compose' func ts where
-    func l'
+    func l' f
       | l == l' = t1
-      | otherwise = T [(Index.pureI l', one)]
+      | otherwise = T [(Index.fromLbl l', one)]
     compose' func [] = []
     compose' func ((i, x):ts) = (i2, x*x2) : 
-      (mergeLWith(+) ts2 $ compose' func ts) where
+      (mergeLWith (+) ts2 $ compose' func ts) where
         (T ((i2, x2):ts2)) = Index.eval i func
-    joinRepeats [] = []
-    joinRepeats [x] = [x]
-    joinRepeats ((i1,x1):(i2,x2):xs)
-      | i1 == i2 = joinRepeats $ (i1, x1 + x2):xs
-      | otherwise = (i1, x1) : (joinRepeats $ (i2,x2):xs)
-
+    
 -- | singleton returns the series of a single value at a specific index
 singleton :: Ring.C a => i -> T i a
 singleton i = T [(i, one)]
@@ -113,17 +120,16 @@ excludeZeroes = filter (\(_, x) -> not (isZero x))
 
 
 -- | Generates the series 1 + x + x^2 + x^3 + ...  for a given label
-star :: (Ring.C a, Mon.C i) => i -> T i a
-star i = T $ map (\n -> (n `mtimes` i, one)) [0..]
-    where mtimes n l = Mon.cumulate $ take n $ repeat i
+star :: (Ring.C a, MPow.C i) => i -> T i a
+star i = T $ map (\n -> (i `MPow.mpower` n, one)) [0..]
     
 
 -- | Generates the series 1 + x + x^2/2 + x^3/6 + x^4/24 + ...
 -- for a given label and field coefficients
-expS :: (Field.C a, Mon.C i) => i -> T i a 
-expS i = T $ zipWith (\n f -> (n `mtimes` i, one / (fromInteger f))) [0..] fact
-    where mtimes n l = Mon.cumulate $ take (fromInteger n) $ repeat i
-          fact = one:zipWith (*) fact [one..]
+expS :: (Field.C a, MPow.C i) => i -> T i a 
+expS i = T $ zipWith (\n f -> (i `MPow.mpower` (fromInteger n), one / (fromInteger f))) 
+    [0..] fact
+    where fact = one:zipWith (*) fact [one..]
 
 
 

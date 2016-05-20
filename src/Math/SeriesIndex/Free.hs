@@ -20,7 +20,7 @@ instance Mon.C (T l) where
 instance (Show l) => Show (T l) where
     show (T l) = show l
 instance (Ord l) => Index.C (T l) l where
-    eval (T l) f = product $ map f l
-    pureI l = T $ [l]
-
+    eval (T ls) f = product $ map (flip f id) ls
+    fromLblPow l i = T $ take (fromInteger i) $ repeat l
+    getLblPow l (T ls) = sum $ map (\l' -> if (l == l') then 1 else 0) ls
 
