@@ -58,14 +58,15 @@ liftIndex f (T ps) = T $ joinRepeats $ map (\(i,a) -> (f i, a)) ps
 
 -- | compose two sparse series given a label to replace with another series
 -- as long as the series to replace the label has 0 constant term
-compose :: (Index.C i l, ZT.C a, Ring.C a) => T i a -> (l, T i a) -> T i a 
+compose :: (Index.C i, ZT.C a, Ring.C a) => 
+    T i a -> (Index.Label i, T i a) -> T i a 
 compose (T ts) (l, t1) =  T $ joinRepeats $ compose' func ts where
     func l' f
-      | l == l' = t1
+      | l == l' = (liftIndex f) t1
       | otherwise = T [(Index.fromLbl l', one)]
     compose' func [] = []
     compose' func ((i, x):ts) = (i2, x*x2) : 
-      (mergeLWith (+) ts2 $ compose' func ts) where
+      (map (fmap (x*)) $ mergeLWith (+) ts2 $ compose' func ts) where
         (T ((i2, x2):ts2)) = Index.eval i func
     
 -- | singleton returns the series of a single value at a specific index

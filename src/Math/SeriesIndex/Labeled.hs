@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 
 module Math.SeriesIndex.Labeled
 ( T 
@@ -33,7 +33,8 @@ instance (Ord l, Add.C a, Ord a) => Ord (T l a) where
     compare t1@(T m1) t2@(T m2) = if normCompare /= EQ then normCompare else
         compare (Map.toAscList m1) (Map.toAscList m2) where 
             normCompare = compare (norm (flip const) t1) (norm (flip const) t2)
-instance (Ord l, ZT.C a, ToInt.C a, Ring.C a) => Index.C (T l a) l where
+instance (Ord l, ZT.C a, ToInt.C a, Ring.C a) => Index.C (T l a) where
+    type Label (T l a) = l
     eval (T m) f = Map.foldrWithKey doPower one m where
       doPower l a1 r = (f l id)^(toInteger a1) * r
     fromLblPow l n = T $ Map.singleton l (fromInteger n)

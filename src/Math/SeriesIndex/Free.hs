@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 
 module Math.SeriesIndex.Free
 ( T 
@@ -19,7 +19,8 @@ instance Mon.C (T l) where
     idt = T []
 instance (Show l) => Show (T l) where
     show (T l) = show l
-instance (Ord l) => Index.C (T l) l where
+instance (Ord l) => Index.C (T l) where
+    type Label (T l) = l
     eval (T ls) f = product $ map (flip f id) ls
     fromLblPow l i = T $ take (fromInteger i) $ repeat l
     getLblPow l (T ls) = sum $ map (\l' -> if (l == l') then 1 else 0) ls
