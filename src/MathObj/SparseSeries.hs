@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Math.SparseSeries 
+module MathObj.SparseSeries 
 ( T (T)
 ) where
 import NumericPrelude
@@ -12,7 +12,7 @@ import qualified Algebra.MPower as MPow
 import qualified Algebra.Ring as Ring
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map as Map
-import qualified Math.SeriesIndex as Index
+import qualified MathObj.SeriesIndex as Index
 
 
 newtype T i a = T [(i, a)]

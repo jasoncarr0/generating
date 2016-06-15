@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 
-module Math.SeriesIndex.Labeled
+module MathObj.SeriesIndex.Labeled
 ( T 
 , enumLabelsBy
 , enumLabelsWeighted
@@ -14,7 +14,7 @@ import qualified Algebra.Ring as Ring
 import qualified Algebra.ToInteger as ToInt
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
-import qualified Math.SeriesIndex as Index
+import qualified MathObj.SeriesIndex as Index
 
 
 

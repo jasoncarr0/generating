@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts #-}
 
-module Math.SeriesIndex
+module MathObj.SeriesIndex
 ( C
 , Label
 , eval

@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 
-module Math.SeriesIndex.Free
+module MathObj.SeriesIndex.Free
 ( T 
 ) where
 
@@ -11,7 +11,7 @@ import qualified Algebra.Ring as Ring
 import qualified Algebra.ToInteger as ToInt
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map.Strict as Map
-import qualified Math.SeriesIndex as Index
+import qualified MathObj.SeriesIndex as Index
 
 newtype T l = T [l] deriving (Eq, Ord)
 instance Mon.C (T l) where

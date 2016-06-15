@@ -13,7 +13,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:    Math.SparseSeries Math.SeriesIndex Math.SeriesIndex.Free Math.SeriesIndex.Labeled
+  exposed-modules:    MathObj.SparseSeries MathObj.SeriesIndex MathObj.SeriesIndex.Free MathObj.SeriesIndex.Labeled
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9,
