@@ -2,6 +2,12 @@
 
 module MathObj.SparseSeries 
 ( T (T)
+, compose
+, mergeWith
+, mergeWithIndex
+, multWith
+, star
+, expS
 ) where
 import NumericPrelude
 import qualified Algebra.Additive as Add

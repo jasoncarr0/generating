@@ -2,6 +2,7 @@
 
 module MathObj.SeriesIndex.Free
 ( T 
+, fromList
 ) where
 
 import NumericPrelude
@@ -25,3 +26,5 @@ instance (Ord l) => Index.C (T l) where
     fromLblPow l i = T $ take (fromInteger i) $ repeat l
     getLblPow l (T ls) = sum $ map (\l' -> if (l == l') then 1 else 0) ls
 
+fromList :: [l] -> T l
+fromList = T
