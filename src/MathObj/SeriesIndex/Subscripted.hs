@@ -4,6 +4,8 @@ module MathObj.SeriesIndex.Subscripted
 ( T 
 , fromList
 , multSubscript
+, forgetSubscript
+, raiseSubscript
 ) where
 
 import NumericPrelude
@@ -52,6 +54,18 @@ instance (Ord l, ZT.C a, ToInt.C a, Ring.C a) => Index.C (T l a) where
 multSubscript :: Ring.C a => a -> T l a -> T l a
 multSubscript s = lift1 $ Map.mapKeysMonotonic (fmap (s*))
 
+-- | Forgets the subscripts for a given label
+forgetSubscript :: (Ord l, Ord a, Ring.C a) => (l -> Bool) -> T l a -> T l a
+forgetSubscript f = lift1 $ Map.mapKeysWith (+) 
+    (\(l, s) -> if f l then (l, one) else (l, s))
+
+
+-- | Multiplies the current subscript into the power and forgets the subscript
+-- e.g. x2^3 -> x1^6
+-- The first argument is a label to raise
+raiseSubscript :: (Ord l, Ord a, Ring.C a) => (l -> Bool) -> T l a -> T l a
+raiseSubscript f = (forgetSubscript f) . (lift1 $ Map.mapWithKey
+    (\(l, s) a -> if f l then s*a else a))
 
 -- | Lift from the internal representation to the indexing
 lift0 :: Map.Map (l, a) a -> T l a
