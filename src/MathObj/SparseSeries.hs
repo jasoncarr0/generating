@@ -1,8 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module MathObj.SparseSeries 
 ( T (T)
-, compose
+, compose'
 , mergeWith
 , mergeWithIndex
 , multWith
@@ -18,9 +19,15 @@ import qualified Algebra.MPower as MPow
 import qualified Algebra.Ring as Ring
 import qualified Algebra.ZeroTestable as ZT
 import qualified Data.Map as Map
-import qualified MathObj.SeriesIndex as Index
+import qualified MathObj.SeriesIndex as SI
+import qualified MathObj.SeriesIndex.Labeled as SIL
+import qualified MathObj.SeriesIndex.Subscripted as SIS
+import qualified MathObj.Series as Srs
 
 
+-- | A value of type T contains and list of index value pairs
+-- sorted to be nondecreasing as the list is traversed, that is
+-- the lowest values of the index are always near the front
 newtype T i a = T [(i, a)]
 
 instance Functor (T i) where
@@ -35,8 +42,19 @@ instance (Ord i, Mon.C i, ZT.C a, Ring.C a) => Ring.C (T i a) where
     one = singleton Mon.idt
     fromInteger n = T [(Mon.idt, fromInteger n)]
     t1 * t2 = multWith (\(_, x1) (_, x2) -> x1 * x2) t1 t2
-
-
+instance (Ord i, Mon.C i, ZT.C a, Ring.C a) => Srs.C (T i a) where
+    type Index (T i a) = i
+    type Coeff (T i a) = a
+    mapIndex f (T ps) = T $ joinRepeats $ map (\(i,a) -> (f i, a)) ps
+    compose (T ts) t1 l =  T $ joinRepeats $ compose' func ts where
+      func l' f
+        | l == l' = (Srs.mapIndex f) t1
+        | otherwise = T [(SI.fromLbl l', one)]
+      compose' func [] = []
+      compose' func ((i, x):ts) = (i2, x*x2) : 
+        (map (fmap (x*)) $ mergeLWith (+) ts2 $ compose' func ts) where
+          (T ((i2, x2):ts2)) = SI.eval i func
+    fromIndexPower i p = T [(i, p)]
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str
@@ -44,11 +62,17 @@ instance (Show i, Show a) => Show (T i a) where
 -- result in bottom
 instance (Eq i, Eq a) => Eq (T i a) where
     (T m1) == (T m2) = m1 == m2
-    
 -- | Currently comparison and equality of two equal and infinite series will
 -- result in bottom
 instance (Ord i, Add.C a, Ord a) => Ord (T i a) where
     compare (T m1) (T m2) = compare m1 m2
+
+
+-- | Compose two series where the label of one type is unit without forcing
+-- a label to be specified
+compose' :: (SI.C i, ZT.C a, Ring.C a, SI.Label i ~ ()) => T i a -> T i a -> T i a
+compose' t1 t2 = Srs.compose t1 t2 ()
+
 
 -- | Utility function to join repeated indices
 joinRepeats :: (Eq i, Ring.C a) => [(i, a)] -> [(i, a)]
@@ -58,26 +82,6 @@ joinRepeats ((i1,x1):(i2,x2):xs)
     | i1 == i2 = joinRepeats $ (i1, x1 + x2):xs
     | otherwise = (i1, x1) : (joinRepeats $ (i2,x2):xs)
 
--- | Apply a nondecreasing function the indices to a function on series
-liftIndex :: (Eq i, Ring.C a) => (i -> i) -> T i a -> T i a 
-liftIndex f (T ps) = T $ joinRepeats $ map (\(i,a) -> (f i, a)) ps
-
--- | compose two sparse series given a label to replace with another series
--- as long as the series to replace the label has 0 constant term
-compose :: (Index.C i, ZT.C a, Ring.C a) => 
-    T i a -> (Index.Label i, T i a) -> T i a 
-compose (T ts) (l, t1) =  T $ joinRepeats $ compose' func ts where
-    func l' f
-      | l == l' = (liftIndex f) t1
-      | otherwise = T [(Index.fromLbl l', one)]
-    compose' func [] = []
-    compose' func ((i, x):ts) = (i2, x*x2) : 
-      (map (fmap (x*)) $ mergeLWith (+) ts2 $ compose' func ts) where
-        (T ((i2, x2):ts2)) = Index.eval i func
-    
--- | singleton returns the series of a single value at a specific index
-singleton :: Ring.C a => i -> T i a
-singleton i = T [(i, one)]
 
 
 -- | merge two sparse series together, combining repeated values with a function
@@ -123,9 +127,6 @@ excludeZeroes = filter (\(_, x) -> not (isZero x))
 
 
 
-
-
-
 -- | Generates the series 1 + x + x^2 + x^3 + ...  for a given label
 star :: (Ring.C a, MPow.C i) => i -> T i a
 star i = T $ map (\n -> (i `MPow.mpower` n, one)) [0..]
@@ -137,6 +138,4 @@ expS :: (Field.C a, MPow.C i) => i -> T i a
 expS i = T $ zipWith (\n f -> (i `MPow.mpower` (fromInteger n), one / (fromInteger f))) 
     [0..] fact
     where fact = one:zipWith (*) fact [one..]
-
-
 
