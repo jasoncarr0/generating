@@ -39,10 +39,10 @@ instance (Ord i, Mon.C i, ZT.C a, Add.C a) => Add.C (T i a) where
 instance (Ord i, ZT.C a) => ZT.C (T i a) where
     isZero (T l) = null l -- zero terms should be removed by other operations
 instance (Ord i, Mon.C i, ZT.C a, Ring.C a) => Ring.C (T i a) where
-    one = singleton Mon.idt
+    one = Map.singleton Mon.idt
     fromInteger n = T [(Mon.idt, fromInteger n)]
     t1 * t2 = multWith (\(_, x1) (_, x2) -> x1 * x2) t1 t2
-instance (Ord i, Mon.C i, ZT.C a, Ring.C a) => Srs.C (T i a) where
+instance (Ord i, Mon.C i, ZT.C a, Ring.C a, SI.C i) => Srs.C (T i a) where
     type Index (T i a) = i
     type Coeff (T i a) = a
     mapIndex f (T ps) = T $ joinRepeats $ map (\(i,a) -> (f i, a)) ps
@@ -58,12 +58,10 @@ instance (Ord i, Mon.C i, ZT.C a, Ring.C a) => Srs.C (T i a) where
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str
--- | Currently comparison and equality of two equal and infinite series will
--- result in bottom
+-- | Currently comparison and equality of two equal and infinite series will diverge
 instance (Eq i, Eq a) => Eq (T i a) where
     (T m1) == (T m2) = m1 == m2
--- | Currently comparison and equality of two equal and infinite series will
--- result in bottom
+-- | Currently comparison and equality of two equal and infinite series will diverge
 instance (Ord i, Add.C a, Ord a) => Ord (T i a) where
     compare (T m1) (T m2) = compare m1 m2
 
