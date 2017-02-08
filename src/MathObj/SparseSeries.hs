@@ -23,12 +23,13 @@ import qualified MathObj.SeriesIndex as SI
 import qualified MathObj.SeriesIndex.Labeled as SIL
 import qualified MathObj.SeriesIndex.Subscripted as SIS
 import qualified MathObj.Series as Srs
-
+import Data.Functor ((<$>))
+import Data.List (break)
 
 -- | A value of type T contains and list of index value pairs
 -- sorted to be nondecreasing as the list is traversed, that is
 -- the lowest values of the index are always near the front
-newtype T i a = T [(i, a)]
+newtype T i a = T {fromT :: [(i, a)]}
 
 instance Functor (T i) where
     fmap f (T g) = T (fmap (fmap f) g)
@@ -39,9 +40,10 @@ instance (Ord i, Mon.C i, ZT.C a, Add.C a) => Add.C (T i a) where
 instance (Ord i, ZT.C a) => ZT.C (T i a) where
     isZero (T l) = null l -- zero terms should be removed by other operations
 instance (Ord i, Mon.C i, ZT.C a, Ring.C a) => Ring.C (T i a) where
-    one = Map.singleton Mon.idt
+    one = T $ [(Mon.idt, one)]
     fromInteger n = T [(Mon.idt, fromInteger n)]
     t1 * t2 = multWith (\(_, x1) (_, x2) -> x1 * x2) t1 t2
+
 instance (Ord i, Mon.C i, ZT.C a, Ring.C a, SI.C i) => Srs.C (T i a) where
     type Index (T i a) = i
     type Coeff (T i a) = a
@@ -55,6 +57,20 @@ instance (Ord i, Mon.C i, ZT.C a, Ring.C a, SI.C i) => Srs.C (T i a) where
         (map (fmap (x*)) $ mergeLWith (+) ts2 $ compose' func ts) where
           (T ((i2, x2):ts2)) = SI.eval i func
     fromIndexPower i p = T [(i, p)]
+    sumSeq [] = zero
+    sumSeq ((T ts):rest) = T (sumSeq' ts rest) where
+        sumSeq' ((i,a):ts) rest = (sumHeads (i, a) ts1) : (sumSeq' ts (reconcat ts1 ts2)) where
+            (ts1, ts2) = break (checkHead i) (filter (not . null . fromT) rest)
+        sumSeq' [] ((T t1):rest) = sumSeq' t1 rest
+        sumSeq' [] [] = []
+        sumHeads (i, a) ts = (i, a + (sum' $ map (maybeHead . fromT) ts))
+        sum' = foldr (+) zero --numeric prelude version
+        maybeHead ((i',a):ts) = a
+        maybeHead [] = zero
+        checkHead i (T ((i',a'):rest)) = (i /= i')
+        --already filtered nulls out
+        reconcat as bs = (map (T . tail . fromT) as) ++ bs
+
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str

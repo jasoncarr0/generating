@@ -3,12 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module MathObj.Series
-( C
-, Index
-, Coeff
-, mapIndex
-, fromIndexPower
-, compose
+( C (..)
 , term
 ) where
 
@@ -27,6 +22,9 @@ class (Ring.C s, SI.C (Index s)) => C s where
     -- | compose two series, replacing each instance of a given index by
     -- the second series whenever it appears
     compose :: s -> s -> (SI.Label (Index s)) -> s
+    -- | add an nondecreasing list of series with only finitely many nonzero values
+    -- at any given index. This should never diverge for series meeting the precondition
+    sumSeq :: [s] -> s
 
 term :: (C s, Ring.C (Coeff s), SI.C (Index s)) => SI.Label (Index s) -> s
 term l = fromIndexPower (SI.fromLbl l) one
