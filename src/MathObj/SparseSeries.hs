@@ -3,11 +3,12 @@
 
 module MathObj.SparseSeries 
 ( T (T)
+, sparse
+, term
 , compose'
 , mergeWith
 , mergeWithIndex
 , multWith
-, star
 , expS
 ) where
 import NumericPrelude
@@ -74,13 +75,12 @@ instance (Ord i, Mon.C i, ZT.C a, Ring.C a, SI.C i) => Srs.C (T i a) where
 instance (Show i, Show a) => Show (T i a) where
     show (T m1) = drop 3 $ foldr showTerm "" m1 where
         showTerm (i, a) str = " + " ++ (show a) ++ (show i) ++ str
--- | Currently comparison and equality of two equal and infinite series will diverge
+-- | Semidecidable: will diverge on equal series
 instance (Eq i, Eq a) => Eq (T i a) where
     (T m1) == (T m2) = m1 == m2
--- | Currently comparison and equality of two equal and infinite series will diverge
+-- | Semidecidable: will diverge on equal series
 instance (Ord i, Add.C a, Ord a) => Ord (T i a) where
     compare (T m1) (T m2) = compare m1 m2
-
 
 -- | Compose two series where the label of one type is unit without forcing
 -- a label to be specified
@@ -139,12 +139,11 @@ excludeZeroes = filter (\(_, x) -> not (isZero x))
 (!!) :: Eq i => T i a -> i -> a
 (T ts) !! i = snd $ head $ dropWhile (\(i', _) -> i /= i') ts
 
-
-
+{-
 -- | Generates the series 1 + x + x^2 + x^3 + ...  for a given label
 star :: (Ring.C a, MPow.C i) => i -> T i a
 star i = T $ map (\n -> (i `MPow.mpower` n, one)) [0..]
-    
+ -}   
 
 -- | Generates the series 1 + x + x^2/2 + x^3/6 + x^4/24 + ...
 -- for a given label and field coefficients
@@ -152,4 +151,14 @@ expS :: (Field.C a, MPow.C i) => i -> T i a
 expS i = T $ zipWith (\n f -> (i `MPow.mpower` (fromInteger n), one / (fromInteger f))) 
     [0..] fact
     where fact = one:zipWith (*) fact [one..]
+
+-- | Create a SparseSeries.T from a label type and one
+-- term is exported so the name can be used if only one series module is loaded
+term :: Ring.C a => i -> T i a
+term i = T [(i, one)]
+
+-- | Creates a SparseSeries.T from the label type and value
+sparse :: l -> a -> T l a
+sparse l a = T [(l, a)]
+
 

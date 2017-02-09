@@ -4,7 +4,7 @@
 
 module MathObj.Series
 ( C (..)
-, term
+, star
 ) where
 
 import NumericPrelude
@@ -26,10 +26,5 @@ class (Ring.C s, SI.C (Index s)) => C s where
     -- at any given index. This should never diverge for series meeting the precondition
     sumSeq :: [s] -> s
 
-term :: (C s, Ring.C (Coeff s), SI.C (Index s)) => SI.Label (Index s) -> s
-term l = fromIndexPower (SI.fromLbl l) one
-
-x :: (C s, Ring.C (Coeff s), SI.C (Index s), SI.Label (Index s) ~ Char) => s
-x = term 'x'
-
-
+star :: C s => s -> s
+star s = sumSeq $ map (s ^) [0..]

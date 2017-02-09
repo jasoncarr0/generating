@@ -3,6 +3,8 @@
 module MathObj.SeriesIndex.Labeled
 ( T 
 , fromList
+, labeled
+, label
 ) where
 
 import NumericPrelude
@@ -20,8 +22,6 @@ import qualified MathObj.SeriesIndex as Index
 -- | An indexing which maps finitely many elements from a label type to
 -- an exponent, with monoid action given by adding the exponents for each
 newtype T l a = T (Map.Map l a) deriving (Eq)
-
-
 
 instance (Ord l, ZT.C a, Add.C a) => Mon.C (T l a) where
     (T m1) <*> (T m2) = T $ excludeZero $ Map.unionWith (+) m1 m2
@@ -72,3 +72,12 @@ norm f (T m) = Map.foldrWithKey (\k x y -> (f k x) + y) zero m
 -- | Remove all zeroes present in the Map
 excludeZero :: ZT.C a => Map.Map l a -> Map.Map l a
 excludeZero = Map.filter (not . isZero)
+
+-- | Construct a Labeled.T from the index and a number
+labeled :: l -> a -> T l a
+labeled l a = T (Map.singleton l a)
+
+-- | Construct a Labeled.T from the base label (using one)
+-- label is exported so the name can be used if only one label module is loaded
+label :: Ring.C a => l -> T l a
+label l = T (Map.singleton l one)

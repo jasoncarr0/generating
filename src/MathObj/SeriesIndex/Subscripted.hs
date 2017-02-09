@@ -6,6 +6,8 @@ module MathObj.SeriesIndex.Subscripted
 , multSubscript
 , forgetSubscript
 , raiseSubscript
+, subscripted
+, label
 ) where
 
 import NumericPrelude
@@ -23,8 +25,6 @@ import qualified MathObj.SeriesIndex as Index
 
 -- | An indexing which maps to each pair of label and subscript a power
 newtype T l a = T (Map.Map (l, a) a) deriving (Eq)
-
-
 
 instance (Ord l, Ord a, ZT.C a, Add.C a) => Mon.C (T l a) where
     (T m1) <*> (T m2) = T $ excludeZero $ Map.unionWith (+) m1 m2
@@ -92,3 +92,12 @@ norm f (T m) = Map.foldrWithKey (\k x y -> (f k x) + y) zero m
 -- | Remove all zeroes present in the Map
 excludeZero :: ZT.C a => Map.Map (l, a) a -> Map.Map (l, a) a
 excludeZero = Map.filter (not . isZero)
+
+-- | Construct a Subscripted.T from a label, subscript and power
+subscripted :: l -> a -> a -> T l a
+subscripted l sub pow = T (Map.singleton (l, sub) pow)
+
+-- | Construct a Subscripted.T from the base label, with subscript and power one
+-- label is exported so the name can be used if only one label module is loaded
+label :: Ring.C a => l -> T l a
+label l = T (Map.singleton (l, one) one) 
